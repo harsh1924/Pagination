@@ -5,15 +5,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import connectToDB from "../server/dbConfig/dbConfig";
 
-const Pagination = ({ searchParams }: { searchParams: string }) => {
+import data from "../../data/dataa.json";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
+const Pagination = () => {
     const [allCourses, setAllCourses] = useState<any[]>([]);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
-    const limit = 5; // Set the number of items per page
+    // const limit = 5; // Set the number of items per page
 
     const getCourses = async (page: number) => {
         connectToDB();
-        const response = await fetch(`/api/get-all-course?page=${page}&limit=${limit}`);
+        const response = await fetch(`/api/get-all-course?page=${page}`);
         const data = await response.json();
         const allCourses: any[] = data.courses;
         setAllCourses(allCourses);
@@ -22,14 +25,24 @@ const Pagination = ({ searchParams }: { searchParams: string }) => {
 
     useEffect(() => {
         // Get the current page from searchParams
-        const page = parseInt(searchParams['page']) || 1; 
+        const storedPage = localStorage.getItem('currentPage');
+        const page = storedPage ? parseInt(storedPage) : 1;
         setCurrentPage(page);
         getCourses(page);
-    }, [searchParams]);
+    }, []);
 
     const handlePageChange = (newPage: number) => {
         setCurrentPage(newPage);
+        // Store the current page in Local Storage
+        localStorage.setItem('currentPage', newPage.toString());
         getCourses(newPage);
+    }
+
+    let pageNumbers: Number[] = [];
+    for (let i: number = currentPage - 2; i <= currentPage + 2; i++) {
+        if (i < 1) continue;
+        if (i > totalPages) break;
+        pageNumbers.push(i);
     }
 
     return (
@@ -68,16 +81,36 @@ const Pagination = ({ searchParams }: { searchParams: string }) => {
                     disabled={currentPage === 1}
                     className="mx-2 px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
                 >
-                    Previous
+                    <ArrowLeft />
                 </button>
-                <span className="mx-2">Page {currentPage} of {totalPages}</span>
+                <span className="mx-2">
+                    {/* Page {currentPage} of {totalPages} */}
+                    {/* {Array.from({ length: totalPages }, (_, index) => (
+                        <span className="mr-1 cursor-pointer" key={index} onClick={() => handlePageChange(index + 1)} style={{ textDecoration: currentPage === index + 1 ? 'underline' : 'none' }}>
+                            {index + 1}
+                        </span>
+                    ))} */}
+                    {pageNumbers.map(pageNo => (
+                        <span key={pageNo.toString()} className="mr-1 cursor-pointer" onClick={() => handlePageChange(parseInt(pageNo))} style={{ textDecoration: currentPage === pageNo ? 'underline' : 'none', color: currentPage === pageNo && 'red' }}>
+                            {pageNo.toString()}
+                        </span>
+                    ))}
+                </span>
                 <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="mx-2 px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
                 >
-                    Next
+                    <ArrowRight />
                 </button>
+                {currentPage}
+            </div>
+            <div className="">
+                {data.map(data => (
+                    <div key={data.name}>
+                        {data.name}
+                    </div>
+                ))}
             </div>
         </>
     )

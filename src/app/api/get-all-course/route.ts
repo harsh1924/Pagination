@@ -9,7 +9,7 @@ export async function GET(request: { url: string | URL; }) {
     const page = parseInt(searchParams.get('page')!) || 1;
 
     // Default to 10 items per page
-    const limit = parseInt(searchParams.get('limit')!) || 5;
+    const limit = 5;
 
     // Calculate the number of items to skip
     const skip = (page - 1) * limit;
